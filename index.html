@@ -318,6 +318,14 @@ table.sc-table tr.striking td{font-weight:700;}
           <div><label>Overs per innings</label><input id="oversLimit" type="number" inputmode="numeric" placeholder="e.g. 6" /></div>
           <div><label>Wickets to end innings</label><input id="wktLimit" type="number" inputmode="numeric" placeholder="e.g. 5" /></div>
         </div>
+        <div>
+          <label>Who's on Team A for this match? (tap to add/remove)</label>
+          <div class="chip-row" id="pickTeamA"></div>
+        </div>
+        <div>
+          <label>Who's on Team B for this match?</label>
+          <div class="chip-row" id="pickTeamB"></div>
+        </div>
         <div class="two-col">
           <div><label>Opener 1 (on strike)</label><select id="bat1"></select><input id="bat1Other" class="hidden" placeholder="Type a name" style="margin-top:6px;"></div>
           <div><label>Opener 2</label><select id="bat2"></select><input id="bat2Other" class="hidden" placeholder="Type a name" style="margin-top:6px;"></div>
@@ -536,7 +544,7 @@ function showView(name){
   if(name==='pastgames') loadPastGames();
   if(name==='stats') loadStatistics();
   if(name==='players') renderPlayersView();
-  if(name==='setup') populateSetupSelects();
+  if(name==='setup'){ setupTeamA = []; setupTeamB = []; renderTeamPickers(); populateSetupSelects(); }
 }
 document.getElementById('backBtn').addEventListener('click', ()=> showView('home'));
 
@@ -639,25 +647,50 @@ function resizeImageFile(file, maxSize, cb){
   };
   reader.readAsDataURL(file);
 }
-function rosterByPool(pool){ return roster.filter(p=>p.team===pool); }
+function rosterAll(){ return roster.slice().sort((a,b)=>a.name.localeCompare(b.name)); }
+function teamPlayers(M, pool){ return M ? (pool==='A' ? (M.teamARoster||[]) : (M.teamBRoster||[])) : []; }
 function initials(name){ return (name||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
 function avatarHtml(p, size){
   const s = size||34;
   if(p && p.photo) return `<img class="avatar" style="width:${s}px;height:${s}px;" src="${p.photo}">`;
   return `<div class="avatar" style="width:${s}px;height:${s}px;">${initials(p?p.name:'?')}</div>`;
 }
-function populateSelect(selectEl, otherEl, pool){
-  const players = rosterByPool(pool);
-  selectEl.innerHTML = players.map(p=>`<option value="${p.name}">${p.name}</option>`).join('')
+
+/* -- new-match team pickers: tap any roster player into Team A or Team B for THIS match -- */
+let setupTeamA = [], setupTeamB = [];
+function renderTeamPickers(){
+  const names = rosterAll().map(p=>p.name);
+  const mkChips = (containerId, selected, other) => {
+    const el = document.getElementById(containerId);
+    el.innerHTML = names.length
+      ? names.map(n=>`<button type="button" class="chip${selected.includes(n)?' selected':''}" data-name="${n}">${n}</button>`).join('')
+      : '<p style="opacity:.5;font-size:13px;margin:0;">No players yet — add some from the Player list first.</p>';
+    el.querySelectorAll('[data-name]').forEach(b=>{
+      b.onclick = ()=>{
+        const n = b.dataset.name;
+        const idx = selected.indexOf(n);
+        if(idx>=0) selected.splice(idx,1);
+        else { selected.push(n); const oIdx = other.indexOf(n); if(oIdx>=0) other.splice(oIdx,1); }
+        renderTeamPickers();
+        populateSetupSelects();
+      };
+    });
+  };
+  mkChips('pickTeamA', setupTeamA, setupTeamB);
+  mkChips('pickTeamB', setupTeamB, setupTeamA);
+}
+
+function populateSelectFromNames(selectEl, otherEl, names){
+  selectEl.innerHTML = names.map(n=>`<option value="${n}">${n}</option>`).join('')
     + `<option value="__other__">+ Type a new name…</option>`;
-  otherEl.classList.toggle('hidden', players.length>0);
+  otherEl.classList.toggle('hidden', names.length>0);
   selectEl.onchange = ()=>{ otherEl.classList.toggle('hidden', selectEl.value!=='__other__'); };
-  if(players.length===0) selectEl.value = '__other__';
+  if(names.length===0) selectEl.value = '__other__';
 }
 function populateSetupSelects(){
-  populateSelect(document.getElementById('bat1'), document.getElementById('bat1Other'), 'A');
-  populateSelect(document.getElementById('bat2'), document.getElementById('bat2Other'), 'A');
-  populateSelect(document.getElementById('bowl1'), document.getElementById('bowl1Other'), 'B');
+  populateSelectFromNames(document.getElementById('bat1'), document.getElementById('bat1Other'), setupTeamA);
+  populateSelectFromNames(document.getElementById('bat2'), document.getElementById('bat2Other'), setupTeamA);
+  populateSelectFromNames(document.getElementById('bowl1'), document.getElementById('bowl1Other'), setupTeamB);
 }
 function selectedValue(selectId, otherId){
   const sel = document.getElementById(selectId);
@@ -665,28 +698,27 @@ function selectedValue(selectId, otherId){
   return sel.value;
 }
 
-function removePlayer(name, pool, afterCb){
+function removePlayer(name, afterCb){
   showModal({
     title:'Remove '+name+'?',
-    desc:'This removes them from the roster. It will not change any match already in progress.',
+    desc:'This removes them from the shared roster. It will not change any match already in progress.',
     confirmLabel:'Remove', dangerConfirm:true,
     onConfirm:()=>{
-      roster = roster.filter(p=>!(p.name===name && p.team===pool));
+      roster = roster.filter(p=>p.name!==name);
       persistRoster();
       if(afterCb) afterCb();
     }
   });
 }
 
-function openAddPlayerForm(pool, afterCb){
+function openAddPlayerForm(afterCb){
   const root = document.getElementById('modalRoot');
   root.innerHTML = '';
   const backdrop = document.createElement('div');
   backdrop.className = 'modal-backdrop';
   const sheet = document.createElement('div');
   sheet.className = 'modal-sheet';
-  const teamLabel = pool==='A' ? 'Squad A' : 'Squad B';
-  sheet.innerHTML = `<h3>Add player — ${teamLabel}</h3>
+  sheet.innerHTML = `<h3>Add player</h3>
     <div class="photo-input-row">
       <div id="apAvatar">${avatarHtml(null,48)}</div>
       <button class="btn" id="apPhotoBtn" type="button">📷 Add photo</button>
@@ -715,8 +747,8 @@ function openAddPlayerForm(pool, afterCb){
   document.getElementById('apSave').onclick = ()=>{
     const name = document.getElementById('apName').value.trim();
     if(!name){ showToast('Enter a name first'); return; }
-    if(roster.some(p=>p.name===name && p.team===pool)){ showToast(name+' is already on this team'); return; }
-    roster.push({name, team:pool, photo: pendingPhoto});
+    if(roster.some(p=>p.name===name)){ showToast(name+' is already on the roster'); return; }
+    roster.push({name, photo: pendingPhoto});
     persistRoster();
     root.innerHTML = '';
     if(afterCb) afterCb();
@@ -727,24 +759,21 @@ function openAddPlayerForm(pool, afterCb){
 function renderPlayersView(){
   if(!firestore) return;
   const body = document.getElementById('playersBody');
-  function poolSection(pool, label){
-    const players = rosterByPool(pool);
-    const rows = players.map(p=>`
-      <div class="roster-row">
-        ${avatarHtml(p,34)}
-        <span class="rname">${p.name}</span>
-        ${canEdit?`<button class="rdel" data-rm="${p.name}|${pool}">✕</button>`:''}
-      </div>`).join('') || `<p style="opacity:.5;font-size:13px;padding:6px 0;">No players yet.</p>`;
-    return `<div class="card"><h2>${label}</h2>${rows}
-      ${canEdit?`<button class="btn wide-btn" data-addto="${pool}" style="margin-top:8px;">+ Add player to ${label}</button>`:''}</div>`;
+  const players = rosterAll();
+  const rows = players.map(p=>`
+    <div class="roster-row">
+      ${avatarHtml(p,34)}
+      <span class="rname">${p.name}</span>
+      ${canEdit?`<button class="rdel" data-rm="${p.name}">✕</button>`:''}
+    </div>`).join('') || `<p style="opacity:.5;font-size:13px;padding:6px 0;">No players yet.</p>`;
+  body.innerHTML = `<p class="footer-note" style="margin:10px 0;">${canEdit?"One shared roster — pick who's on Team A or B each time you start a match.":'Everyone in the shared roster.'}</p>
+    <div class="card"><h2>All players</h2>${rows}
+    ${canEdit?`<button class="btn wide-btn" id="addPlayerBtn" style="margin-top:8px;">+ Add player</button>`:''}</div>`;
+  if(canEdit){
+    document.getElementById('addPlayerBtn').onclick = ()=> openAddPlayerForm(renderPlayersView);
   }
-  body.innerHTML = `<p class="footer-note" style="margin:10px 0;">${canEdit?'A one-time roster — reused every match.':'Everyone on the shared roster.'}</p>`
-    + poolSection('A','Squad A') + poolSection('B','Squad B');
-  body.querySelectorAll('[data-addto]').forEach(b=>{
-    b.onclick = ()=> openAddPlayerForm(b.dataset.addto, renderPlayersView);
-  });
   body.querySelectorAll('[data-rm]').forEach(b=>{
-    b.onclick = ()=>{ const [name,pool] = b.dataset.rm.split('|'); removePlayer(name,pool, renderPlayersView); };
+    b.onclick = ()=> removePlayer(b.dataset.rm, renderPlayersView);
   });
 }
 document.getElementById('manageFromSetup').addEventListener('click', ()=> showView('players'));
@@ -863,7 +892,7 @@ function render(){
   [[b1,'row-bat1'],[b2,'row-bat2']].forEach(([name,id])=>{
     const el = document.getElementById(id);
     const d = inn.batters[name];
-    const rp = roster.find(p=>p.name===name && p.team===inn.battingPool);
+    const rp = roster.find(p=>p.name===name);
     const notOutMark = d && !d.out ? '<span class="notout-star">*</span>' : '';
     el.querySelector('.name').innerHTML = avatarHtml(rp,22)+' '+name+notOutMark;
     el.querySelector('.stat').textContent = d.runs+' ('+d.balls+')';
@@ -872,7 +901,7 @@ function render(){
 
   const bowlEl = document.getElementById('row-bowl');
   const bs = inn.bowlers[inn.currentBowler];
-  const rpBowl = roster.find(p=>p.name===inn.currentBowler && p.team===inn.bowlingPool);
+  const rpBowl = roster.find(p=>p.name===inn.currentBowler);
   bowlEl.querySelector('.name').innerHTML = avatarHtml(rpBowl,22)+' '+inn.currentBowler;
   bowlEl.querySelector('.stat').textContent = fmtOvers(bs.balls)+'-'+(bs.maidens||0)+'-'+bs.runs+'-'+bs.wkts+' (econ '+economy(bs.runs,bs.balls)+')';
 
@@ -898,7 +927,7 @@ function render(){
   renderScorecard();
 }
 
-function scTable(inn){
+function scTable(inn, M){
   let html = `<table class="sc-table"><tr><th>Batter</th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr>`;
   inn.battingOrder.forEach(name=>{
     const d = inn.batters[name];
@@ -920,7 +949,7 @@ function scTable(inn){
   if(inn.fow.length){
     html += `<div class="sc-fow">Fall of wickets: `+inn.fow.map(f=>f.score+'-'+f.wkt+' ('+f.batter+', '+f.over+' ov)').join(', ')+`</div>`;
   }
-  const yetToBat = rosterByPool(inn.battingPool).map(p=>p.name).filter(n=>!inn.battingOrder.includes(n));
+  const yetToBat = teamPlayers(M, inn.battingPool).filter(n=>!inn.battingOrder.includes(n));
   if(yetToBat.length){
     html += `<div class="sc-fow">Yet to bat: `+yetToBat.join(', ')+`</div>`;
   }
@@ -929,10 +958,10 @@ function scTable(inn){
 
 function inningsCardsHtml(M){
   let html = `<div class="card"><div class="sc-inn-title">${M.first.battingTeam} — 1st innings</div>
-    <div class="sc-total">${M.first.runs}/${M.first.wkts} (${fmtOvers(M.first.balls)} ov)</div>${scTable(M.first)}</div>`;
+    <div class="sc-total">${M.first.runs}/${M.first.wkts} (${fmtOvers(M.first.balls)} ov)</div>${scTable(M.first, M)}</div>`;
   if(M.second){
     html += `<div class="card"><div class="sc-inn-title">${M.second.battingTeam} — 2nd innings</div>
-      <div class="sc-total">${M.second.runs}/${M.second.wkts} (${fmtOvers(M.second.balls)} ov)</div>${scTable(M.second)}</div>`;
+      <div class="sc-total">${M.second.runs}/${M.second.wkts} (${fmtOvers(M.second.balls)} ov)</div>${scTable(M.second, M)}</div>`;
   }
   return html;
 }
@@ -997,7 +1026,7 @@ function promptSecondInningsLineup(inn){
   backdrop.className = 'modal-backdrop';
   const sheet = document.createElement('div');
   sheet.className = 'modal-sheet';
-  const opt = (pool)=> rosterByPool(pool).map(p=>`<option value="${p.name}">${p.name}</option>`).join('') + `<option value="__other__">+ Type a new name…</option>`;
+  const opt = (pool)=> teamPlayers(S, pool).map(n=>`<option value="${n}">${n}</option>`).join('') + `<option value="__other__">+ Type a new name…</option>`;
   sheet.innerHTML = `<h3>2nd innings</h3><p>${inn.bowlingTeam} now bat, chasing ${inn.runs+1}.</p>
     <div class="setup-grid">
       <div><label>Opener 1 (on strike)</label><select id="si-b1">${opt(newBattingPool)}</select><input id="si-b1o" class="hidden" placeholder="Type a name" style="margin-top:6px;"></div>
@@ -1029,7 +1058,7 @@ function promptSecondInningsLineup(inn){
 function promptNextBowler(){
   const inn = currentInnings();
   const used = inn.bowlerOrder.filter(n=>n!==inn.lastOverBowler);
-  const rosterNames = rosterByPool(inn.bowlingPool).map(p=>p.name).filter(n=>n!==inn.lastOverBowler);
+  const rosterNames = teamPlayers(S, inn.bowlingPool).filter(n=>n!==inn.lastOverBowler);
   const names = Array.from(new Set([...used, ...rosterNames]));
   const root = document.getElementById('modalRoot');
   root.innerHTML = '';
@@ -1065,7 +1094,7 @@ function promptNextBowler(){
 
 function promptNextBatsman(placeholderName){
   const inn = currentInnings();
-  const rosterNames = rosterByPool(inn.battingPool).map(p=>p.name).filter(n=>!inn.battingOrder.includes(n));
+  const rosterNames = teamPlayers(S, inn.battingPool).filter(n=>!inn.battingOrder.includes(n));
   const root = document.getElementById('modalRoot');
   root.innerHTML = '';
   const backdrop = document.createElement('div');
@@ -1188,6 +1217,7 @@ document.getElementById('startBtn').addEventListener('click', ()=>{
   const bowl1 = selectedValue('bowl1','bowl1Other') || 'Bowler 1';
 
   S = { phase:'live', overs, wktLimit, innings:1, teamA, teamB,
+    teamARoster: setupTeamA.slice(), teamBRoster: setupTeamB.slice(),
     first: newInnings(teamA, teamB, bat1, bat2, bowl1, null, 'A', 'B'), second:null };
   persist(); render();
   showView('live');
@@ -1419,7 +1449,7 @@ function init(){
   rosterRef.onSnapshot(snap=>{
     const data = snap.exists ? snap.data() : null;
     roster = data && data.players ? JSON.parse(JSON.stringify(data.players)) : [];
-    if(currentView==='setup') populateSetupSelects();
+    if(currentView==='setup'){ renderTeamPickers(); populateSetupSelects(); }
     if(currentView==='players') renderPlayersView();
     render();
   }, err=>{ console.error('roster db error', err); });
