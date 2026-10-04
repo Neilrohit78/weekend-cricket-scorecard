@@ -7,10 +7,10 @@
 // controls who can read/write your data is the Firestore security rules you
 // set in the Firebase console (see README.md).
 window.FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCkeAomXz-zgWwkWF0v3INh36yatVSGFbk",
+  authDomain: "weekend-cricket-45766.firebaseapp.com",
+  projectId: "weekend-cricket-45766",
+  storageBucket: "weekend-cricket-45766.firebasestorage.app",
+  messagingSenderId: "1013977297676",
+  appId: "1:1013977297676:web:445be249555e355bae0f29"
 };
