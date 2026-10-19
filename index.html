@@ -16,9 +16,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#132A20; --paper:#F6F3EA; --turf:#1E4A34; --turf2:#26593F;
-  --tan:#C9A257; --ball:#A6301F; --line: rgba(19,42,32,.14);
-  --card:#FFFFFF; --four:#2F6690; --zebra: rgba(19,42,32,.035);
+  --ink:#16271E; --paper:#F3EFE3; --turf:#163D2E; --turf2:#2E7D54;
+  --tan:#D1A043; --ball:#B0261B; --line: rgba(22,39,30,.14);
+  --card:#FFFFFF; --four:#2E6B9E; --zebra: rgba(22,39,30,.035);
+  --glow1: rgba(46,125,84,.12); --glow2: rgba(209,160,67,.10);
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
@@ -26,20 +27,27 @@
 *{box-sizing:border-box;}
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --ink:#EDEAE0; --paper:#0F1D16; --turf:#173626; --turf2:#1E4530;
-    --tan:#D8B267; --line: rgba(237,234,224,.16); --card:#152A20;
-    --four:#5B9BC7; --zebra: rgba(237,234,224,.045);
+    --ink:#EBE6D9; --paper:#0A1612; --turf:#0F2B21; --turf2:#3C9A6B;
+    --tan:#E3B65B; --ball:#C23B2E; --line: rgba(235,230,217,.14);
+    --card:#122420; --four:#6FAEDD; --zebra: rgba(235,230,217,.05);
+    --glow1: rgba(60,154,107,.14); --glow2: rgba(227,182,91,.08);
   }
 }
 :root[data-theme="dark"]{
-  --ink:#EDEAE0; --paper:#0F1D16; --turf:#173626; --turf2:#1E4530;
-  --tan:#D8B267; --line: rgba(237,234,224,.16); --card:#152A20;
-  --four:#5B9BC7; --zebra: rgba(237,234,224,.045);
+  --ink:#EBE6D9; --paper:#0A1612; --turf:#0F2B21; --turf2:#3C9A6B;
+  --tan:#E3B65B; --ball:#C23B2E; --line: rgba(235,230,217,.14);
+  --card:#122420; --four:#6FAEDD; --zebra: rgba(235,230,217,.05);
+  --glow1: rgba(60,154,107,.14); --glow2: rgba(227,182,91,.08);
 }
 html,body{height:100%;}
 html{scroll-padding-top:env(safe-area-inset-top,0px);}
 body{
-  margin:0; background:var(--paper); color:var(--ink);
+  margin:0; color:var(--ink);
+  background:
+    radial-gradient(circle at 12% -4%, var(--glow1), transparent 55%),
+    radial-gradient(circle at 104% 26%, var(--glow2), transparent 45%),
+    var(--paper);
+  background-attachment:fixed;
   font-family:'Inter',system-ui,-apple-system,sans-serif;
   -webkit-font-smoothing:antialiased;
 }
@@ -49,18 +57,21 @@ body{
   position:sticky; top:0; z-index:40; display:flex; align-items:center; gap:8px;
   background:var(--paper); border-bottom:1px solid var(--line);
   padding:12px 14px; padding-top:calc(12px + env(safe-area-inset-top,0px));
+  backdrop-filter:saturate(140%) blur(6px);
 }
 .icon-btn{background:none;border:none;font-size:20px;color:var(--ink);padding:4px 6px;line-height:1;}
 .appbar-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;flex:1;}
 .role-chip{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--line);opacity:.75;white-space:nowrap;}
-.role-chip.editor{background:rgba(30,74,52,.1);border-color:var(--turf);opacity:1;}
+.role-chip.editor{background:rgba(46,125,84,.14);border-color:var(--turf2);color:var(--turf2);opacity:1;font-weight:600;}
 
 .board{
-  background:var(--turf); color:#F6F3EA; border-radius:14px; padding:18px 16px;
+  background:linear-gradient(145deg, var(--turf) 0%, var(--turf) 55%, var(--turf2) 135%);
+  color:#F6F3EA; border-radius:16px; padding:18px 16px;
   position:relative; overflow:hidden; margin-top:14px;
+  box-shadow:0 10px 26px rgba(0,0,0,.18);
 }
 .board::after{
-  content:""; position:absolute; inset:0; opacity:.08; pointer-events:none;
+  content:""; position:absolute; inset:0; opacity:.07; pointer-events:none;
   background:repeating-linear-gradient(90deg,#fff 0 2px,transparent 2px 40px);
 }
 .team-row{display:flex;justify-content:space-between;align-items:baseline;position:relative;}
@@ -79,8 +90,8 @@ body{
 }
 
 .card{
-  background:var(--card); border:1px solid var(--line); border-radius:12px;
-  padding:14px; margin-top:12px;
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:14px; margin-top:12px; box-shadow:0 1px 4px rgba(0,0,0,.05);
 }
 .card h2{font-size:12px;text-transform:none;letter-spacing:0;margin:0 0 10px;opacity:.6;font-weight:600;}
 .batter-row,.bowler-row{display:flex;justify-content:space-between;font-size:14px;padding:5px 0;}
@@ -106,7 +117,7 @@ button{font-family:inherit; cursor:pointer;}
   border-radius:10px; padding:10px; font-size:14px; font-weight:500;
 }
 .btn:active{transform:scale(.97);}
-.primary{background:var(--turf); color:#F6F3EA; border-color:var(--turf);}
+.primary{background:linear-gradient(135deg, var(--turf2), var(--turf)); color:#F6F3EA; border-color:var(--turf);}
 .wide-btn{width:100%;margin-top:12px;}
 
 .runpad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px;}
@@ -214,7 +225,7 @@ table.sc-table th{
 }
 table.sc-table th:first-child, table.sc-table td:first-child{text-align:left;}
 table.sc-table td{padding:6px 4px; border-bottom:1px solid var(--line); text-align:right; font-variant-numeric:tabular-nums;}
-table.sc-table td.dismissal{opacity:.55;font-size:11px;display:block;text-align:left;}
+table.sc-table td.dismissal{opacity:.55;font-size:11px;display:block;text-align:left;margin-top:3px;letter-spacing:.01em;}
 table.sc-table tbody tr:nth-child(even) td{background:var(--zebra);}
 table.sc-table tr.striking td{font-weight:700;}
 .notout-star{color:var(--turf2);font-weight:800;margin-left:1px;}
@@ -239,7 +250,7 @@ table.sc-table tr.striking td{font-weight:700;}
 .menu-card{
   display:flex; align-items:center; gap:14px; width:100%; text-align:left;
   background:var(--card); border:1px solid var(--line); border-radius:12px;
-  padding:16px; margin-top:10px;
+  padding:16px; margin-top:10px; box-shadow:0 1px 4px rgba(0,0,0,.05);
 }
 .menu-card:active{transform:scale(.98);}
 .menu-card-ic{font-size:26px;flex:none;}
@@ -370,6 +381,8 @@ table.sc-table tr.striking td{font-weight:700;}
         <div class="log" id="overLog"></div>
       </div>
 
+      <button class="btn wide-btn hidden" id="undoBallBtn" style="margin-top:12px;">↩️ Undo last ball</button>
+
       <div class="card hidden" id="resumeCard" style="text-align:center;">
         <p style="margin:0 0 10px;font-size:14px;" id="resumeText">Waiting on the next step.</p>
         <button class="btn primary wide-btn" id="resumeBtn" style="margin-top:0;">Continue</button>
@@ -494,6 +507,21 @@ function showDismissalPicker(onPick){
     grid.appendChild(b);
   });
   backdrop.addEventListener('click', e=>{ if(e.target===backdrop) root.innerHTML=''; });
+}
+
+/* Compose a Cricinfo-style dismissal line, attributing the bowler (and fielder, where relevant). */
+function composeDismissal(label, bowler, fielder){
+  const b = bowler || '';
+  const f = (fielder||'').trim();
+  switch(label){
+    case 'Bowled': return 'b '+b;
+    case 'LBW': return 'lbw b '+b;
+    case 'Caught': return f ? ('c '+f+' b '+b) : ('c & b '+b);
+    case 'Stumped': return 'st '+(f||'wk')+' b '+b;
+    case 'Run out': return f ? ('run out ('+f+')') : 'run out';
+    case 'Hit wicket': return 'hit wicket b '+b;
+    default: return label;
+  }
 }
 
 function showModal({title, desc='', fields=[], confirmLabel='Continue', cancelLabel='Cancel', onConfirm, dangerConfirm=false}){
@@ -860,6 +888,8 @@ function render(){
       : "Over complete — pick who's bowling next to continue.";
     document.getElementById('resumeBtn').textContent = inn.needNewBatsman ? "Pick next batter" : "Pick next bowler";
   }
+  document.getElementById('undoBallBtn').classList.toggle('hidden', !(canEdit && S.lastSnapshot));
+
   document.getElementById('footerNote').textContent = S.phase==='done' ? 'Match complete.'
     : (canEdit ? 'Updates live for everyone watching.'
        : (blocked ? (inn.needNewBatsman ? "Waiting on the scorer to pick the next batter…" : "Waiting on the scorer to pick the next bowler…")
@@ -891,6 +921,12 @@ function render(){
   const b1 = inn.order[0], b2 = inn.order[1];
   [[b1,'row-bat1'],[b2,'row-bat2']].forEach(([name,id])=>{
     const el = document.getElementById(id);
+    if(!name){
+      el.querySelector('.name').innerHTML = '<span style="opacity:.45;">— last man batting —</span>';
+      el.querySelector('.stat').textContent = '';
+      el.classList.remove('on');
+      return;
+    }
     const d = inn.batters[name];
     const rp = roster.find(p=>p.name===name);
     const notOutMark = d && !d.out ? '<span class="notout-star">*</span>' : '';
@@ -979,7 +1015,10 @@ function pushOverEvent(inn, label, wicket){
   if(!inn.currentOverEvents) inn.currentOverEvents = [];
   inn.currentOverEvents.push({label, wicket:!!wicket});
 }
-function rotateStrike(inn){ const t = inn.onStrike; inn.onStrike = inn.nonStrike; inn.nonStrike = t; }
+function rotateStrike(inn){
+  if(!inn.nonStrike) return; // last man batting alone — nobody to rotate with
+  const t = inn.onStrike; inn.onStrike = inn.nonStrike; inn.nonStrike = t;
+}
 
 function endOfOverCheck(inn){
   if(inn.balls>0 && inn.balls%6===0){
@@ -998,7 +1037,9 @@ function endOfOverCheck(inn){
 function checkInningsOver(){
   const inn = currentInnings();
   const oversDone = S.overs && Math.floor(inn.balls/6) >= S.overs;
-  const allOut = S.wktLimit && inn.wkts >= S.wktLimit;
+  // Gully-cricket "last man batting": once the squad is exhausted, the solo batter
+  // keeps going until THEY are out too (onStrike becomes null) — not at wktLimit-1.
+  const allOut = inn.lastManStanding ? !inn.onStrike : (S.wktLimit && inn.wkts >= S.wktLimit);
   const chased = inn.target && inn.runs >= inn.target;
   if(oversDone || allOut || chased){ finishInnings(); return true; }
   return false;
@@ -1138,6 +1179,10 @@ function recordBall({runs=0, extra=null, bonus=0, wicket=false, how=''}){
   if(!canEdit || !S || S.phase==='done') return;
   const inn = currentInnings();
   if(inn.needNewBowler || inn.needNewBatsman) return;
+  // Snapshot full match state before mutating, so a mis-tap can be undone.
+  const snapshot = JSON.parse(JSON.stringify(S));
+  delete snapshot.lastSnapshot;
+  S.lastSnapshot = snapshot;
   const batter = inn.batters[inn.onStrike];
   const bs = inn.bowlers[inn.currentBowler];
   let label = '', legalBall = true, rotate = false, teamRunsThisBall = 0, bowlerRunsThisBall = 0;
@@ -1163,13 +1208,33 @@ function recordBall({runs=0, extra=null, bonus=0, wicket=false, how=''}){
   } else if(wicket){
     inn.wkts+=1; bs.wkts+=1; batter.out=true; batter.balls+=1; bs.balls+=1; batter.how = how||'out'; label='W';
     inn.fow.push({wkt:inn.wkts, score:inn.runs, over:fmtOvers(inn.balls+1), batter:inn.onStrike});
-    const nextName = 'Batter '+(inn.fallOfNextBatter++);
-    if(inn.wkts < (S.wktLimit||10)){
-      inn.batters[nextName] = {runs:0,balls:0,fours:0,sixes:0,out:false,how:''};
-      inn.battingOrder.push(nextName);
-      inn.order[inn.order.indexOf(inn.onStrike)] = nextName;
-      inn.onStrike = nextName;
-      inn.needNewBatsman = nextName;
+
+    if(inn.lastManStanding){
+      // The solo last man has now also been dismissed — truly all out, nobody left.
+      inn.order[inn.order.indexOf(inn.onStrike)] = null;
+      inn.onStrike = null;
+    } else {
+      const squad = teamPlayers(S, inn.battingPool);
+      const candidatesLeft = squad.filter(n=>!inn.battingOrder.includes(n));
+      const reachedWktLimit = inn.wkts >= (S.wktLimit||10);
+      if(squad.length>0 && candidatesLeft.length===0 && !reachedWktLimit){
+        // Gully rule: no more replacements in the squad, but the wicket limit hasn't
+        // been hit yet — the surviving partner keeps batting alone, no new partner.
+        inn.lastManStanding = true;
+        inn.order[inn.order.indexOf(inn.onStrike)] = null;
+        inn.onStrike = inn.nonStrike;
+        inn.nonStrike = null;
+        inn.needNewBatsman = false;
+        showToast('Last man batting — '+inn.onStrike+' continues alone');
+      } else if(!reachedWktLimit){
+        const nextName = 'Batter '+(inn.fallOfNextBatter++);
+        inn.batters[nextName] = {runs:0,balls:0,fours:0,sixes:0,out:false,how:''};
+        inn.battingOrder.push(nextName);
+        inn.order[inn.order.indexOf(inn.onStrike)] = nextName;
+        inn.onStrike = nextName;
+        inn.needNewBatsman = nextName;
+      }
+      // else: wicket limit reached with no last-man override — innings ends (handled below).
     }
     inn.partnership = {runs:0, balls:0};
   } else {
@@ -1240,8 +1305,31 @@ document.querySelectorAll('[data-pickextra]').forEach(btn=>{
 });
 document.getElementById('wicketBtn').addEventListener('click', (e)=>{
   flashBtn(e.currentTarget);
-  showDismissalPicker(how=>recordBall({wicket:true, how}));
+  showDismissalPicker(label=>{
+    const inn = currentInnings();
+    const bowler = inn ? inn.currentBowler : '';
+    const needsFielder = (label==='Caught'||label==='Run out'||label==='Stumped');
+    if(needsFielder){
+      showModal({
+        title:label, desc:'Who fielded it? (leave blank if unsure)',
+        fields:[{id:'fielder', label:'Fielder'}],
+        confirmLabel:'Confirm wicket',
+        onConfirm:(v)=> recordBall({wicket:true, how: composeDismissal(label, bowler, v.fielder)})
+      });
+    } else {
+      recordBall({wicket:true, how: composeDismissal(label, bowler, '')});
+    }
+  });
 });
+function undoLastBall(){
+  if(!canEdit || !S || !S.lastSnapshot) return;
+  S = S.lastSnapshot;
+  delete S.lastSnapshot;
+  document.getElementById('modalRoot').innerHTML = ''; // close any innings-transition prompt it may have opened
+  persist(); render();
+  showToast('Last ball undone');
+}
+document.getElementById('undoBallBtn').addEventListener('click', undoLastBall);
 document.getElementById('resumeBtn').addEventListener('click', ()=>{
   if(!canEdit || !S) return;
   const inn = currentInnings();
@@ -1410,6 +1498,7 @@ function openMenu(){
   sheet.className = 'modal-sheet';
   let items = '';
   if(canEdit && S && S.first && S.phase!=='done'){
+    items += `<button class="menu-item" id="mMatchSettings"><span class="ic">⚙️</span>Match settings</button>`;
     items += `<button class="menu-item" id="mEndInnings"><span class="ic">⏭️</span>End current innings</button>`;
   }
   if(canEdit && S && S.first){
@@ -1422,6 +1511,7 @@ function openMenu(){
   root.appendChild(backdrop);
   const close = ()=>{ root.innerHTML=''; };
   backdrop.addEventListener('click', e=>{ if(e.target===backdrop) close(); });
+  if(document.getElementById('mMatchSettings')) document.getElementById('mMatchSettings').onclick = ()=>{ close(); openMatchSettings(); };
   if(document.getElementById('mEndInnings')) document.getElementById('mEndInnings').onclick = ()=>{ close(); confirmEndInnings(); };
   if(document.getElementById('mReset')) document.getElementById('mReset').onclick = ()=>{ close(); confirmResetMatch(); };
   document.getElementById('mManagePlayers').onclick = ()=>{ close(); showView('players'); };
@@ -1434,6 +1524,117 @@ function openMenu(){
     });
   };
 }
+/* ---------- mid-match settings: overs/wickets, add a player, rename a player ---------- */
+function allNamesInMatch(){
+  const names = new Set();
+  [S.first, S.second].filter(Boolean).forEach(inn=>{
+    inn.battingOrder.forEach(n=>names.add(n));
+    inn.bowlerOrder.forEach(n=>names.add(n));
+  });
+  (S.teamARoster||[]).forEach(n=>names.add(n));
+  (S.teamBRoster||[]).forEach(n=>names.add(n));
+  return Array.from(names);
+}
+function renamePlayerInMatch(oldName, newName){
+  if(!oldName || !newName || oldName===newName) return;
+  [S.first, S.second].filter(Boolean).forEach(inn=>{
+    if(inn.batters[oldName]){ inn.batters[newName] = inn.batters[oldName]; delete inn.batters[oldName]; }
+    if(inn.bowlers[oldName]){ inn.bowlers[newName] = inn.bowlers[oldName]; delete inn.bowlers[oldName]; }
+    inn.battingOrder = inn.battingOrder.map(n=>n===oldName?newName:n);
+    inn.bowlerOrder = inn.bowlerOrder.map(n=>n===oldName?newName:n);
+    inn.order = inn.order.map(n=>n===oldName?newName:n);
+    if(inn.onStrike===oldName) inn.onStrike = newName;
+    if(inn.nonStrike===oldName) inn.nonStrike = newName;
+    if(inn.currentBowler===oldName) inn.currentBowler = newName;
+    if(inn.lastOverBowler===oldName) inn.lastOverBowler = newName;
+    if(inn.needNewBatsman===oldName) inn.needNewBatsman = newName;
+    inn.fow.forEach(f=>{ if(f.batter===oldName) f.batter = newName; });
+  });
+  S.teamARoster = (S.teamARoster||[]).map(n=>n===oldName?newName:n);
+  S.teamBRoster = (S.teamBRoster||[]).map(n=>n===oldName?newName:n);
+  persist(); render();
+  showToast(oldName+' renamed to '+newName);
+}
+function openMatchSettings(){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = '';
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  const sheet = document.createElement('div');
+  sheet.className = 'modal-sheet';
+  const addableA = rosterAll().map(p=>p.name).filter(n=>!(S.teamARoster||[]).includes(n));
+  const addableB = rosterAll().map(p=>p.name).filter(n=>!(S.teamBRoster||[]).includes(n));
+  const currentNames = allNamesInMatch();
+  sheet.innerHTML = `
+    <h3>Match settings</h3>
+    <p>Things that come up mid-match in gully cricket.</p>
+    <div class="setup-grid" style="margin-bottom:14px;">
+      <div class="two-col">
+        <div><label>Overs per innings</label><input id="msOvers" type="number" inputmode="numeric" value="${S.overs||''}"></div>
+        <div><label>Wickets to end innings</label><input id="msWkts" type="number" inputmode="numeric" value="${S.wktLimit||''}"></div>
+      </div>
+      <button class="btn" id="msSaveLimits">Save overs / wickets</button>
+    </div>
+    <div class="setup-grid" style="margin-bottom:14px;">
+      <label>Add a player to this match</label>
+      <div class="two-col">
+        <select id="msAddTeam"><option value="A">${S.teamA} (Team A)</option><option value="B">${S.teamB} (Team B)</option></select>
+        <select id="msAddName">
+          ${addableA.length||addableB.length ? '' : '<option value="">No spare roster players</option>'}
+          ${rosterAll().map(p=>`<option value="${p.name}">${p.name}</option>`).join('')}
+          <option value="__other__">+ Type a new name…</option>
+        </select>
+      </div>
+      <input id="msAddOther" class="hidden" placeholder="Player name" style="margin-top:6px;">
+      <button class="btn" id="msAddBtn" style="margin-top:8px;">Add to team</button>
+    </div>
+    <div class="setup-grid">
+      <label>Rename a player (fixes a typo for the rest of this match)</label>
+      <div class="two-col">
+        <select id="msRenameFrom">${currentNames.map(n=>`<option value="${n}">${n}</option>`).join('')}</select>
+        <input id="msRenameTo" placeholder="Corrected name">
+      </div>
+      <button class="btn" id="msRenameBtn" style="margin-top:8px;">Rename</button>
+    </div>
+    <div class="modal-actions"><button class="btn wide-btn" id="msClose" style="width:100%;">Close</button></div>`;
+  backdrop.appendChild(sheet);
+  root.appendChild(backdrop);
+  const close = ()=>{ root.innerHTML=''; };
+  backdrop.addEventListener('click', e=>{ if(e.target===backdrop) close(); });
+  document.getElementById('msClose').onclick = close;
+
+  document.getElementById('msSaveLimits').onclick = ()=>{
+    const overs = parseInt(document.getElementById('msOvers').value) || S.overs || 0;
+    const wkts = parseInt(document.getElementById('msWkts').value) || S.wktLimit || 10;
+    S.overs = overs; S.wktLimit = wkts;
+    persist(); render();
+    showToast('Overs/wickets updated');
+  };
+
+  const addSel = document.getElementById('msAddName'), addOther = document.getElementById('msAddOther');
+  addSel.onchange = ()=> addOther.classList.toggle('hidden', addSel.value!=='__other__');
+  document.getElementById('msAddBtn').onclick = ()=>{
+    const team = document.getElementById('msAddTeam').value;
+    const name = (addSel.value==='__other__' ? addOther.value.trim() : addSel.value);
+    if(!name){ showToast('Enter a name first'); return; }
+    const key = team==='A' ? 'teamARoster' : 'teamBRoster';
+    if(!S[key]) S[key] = [];
+    if(S[key].includes(name)){ showToast(name+' is already on that team'); return; }
+    S[key].push(name);
+    // If this was a mid-innings "last man" situation and a new player just became
+    // available, a fresh wicket will offer them again — nothing else to patch here.
+    persist(); render();
+    showToast(name+' added to '+(team==='A'?S.teamA:S.teamB));
+  };
+
+  document.getElementById('msRenameBtn').onclick = ()=>{
+    const from = document.getElementById('msRenameFrom').value;
+    const to = document.getElementById('msRenameTo').value.trim();
+    if(!to){ showToast('Enter the corrected name'); return; }
+    renamePlayerInMatch(from, to);
+  };
+}
+
 document.getElementById('menuBtn').addEventListener('click', openMenu);
 
 /* ---------- boot ---------- */
